@@ -1,5 +1,9 @@
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { CSVLink, CSVDownload } from 'react-csv';
+
+import Papa from 'papaparse';
+import Encoding from 'encoding-japanese';
 
 import React from 'react';
 import logo from './logo.svg';
@@ -14,8 +18,32 @@ const style = {
 
 function App() {
   const onDrop = useCallback((acceptedFiles) => {
-    // Do something with the files
-    console.log('acceptedFiles:', acceptedFiles);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const codes = new Uint8Array(reader.result as ArrayBuffer);
+      const encoding = Encoding.detect(codes);
+
+      if (encoding !== false) {
+        const unicodeString = Encoding.convert(codes, {
+          to: 'UNICODE',
+          from: encoding,
+          type: 'string',
+        });
+
+        Papa.parse(unicodeString, {
+              header: true,
+              dynamicTyping: true,
+              skipEmptyLines: true,
+              complete: (results) => {
+                console.log(results);
+              }
+            }
+        );
+      } else {
+        console.log("csvエンコーディングが推測できません")
+      }
+    }
+    reader.readAsArrayBuffer(acceptedFiles[0]);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
@@ -28,7 +56,7 @@ function App() {
           {
             isDragActive ?
                 <p>Drop the files here ...</p> :
-                <p>Drag 'n' drop some files here, or click to select files</p>
+                <p>CSVファイルをドラッグアンドドロップしてください</p>
           }
         </div>
       </header>
