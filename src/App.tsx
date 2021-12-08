@@ -17,8 +17,12 @@ const style = {
 };
 
 function App() {
+  const [result, setResult] = React.useState([[""]]);
+  const [summary, setSummary] = React.useState([0]);
+
   const onDrop = useCallback((acceptedFiles) => {
     const reader = new FileReader();
+
     reader.onload = () => {
       const codes = new Uint8Array(reader.result as ArrayBuffer);
       const encoding = Encoding.detect(codes);
@@ -31,16 +35,43 @@ function App() {
         });
 
         Papa.parse(unicodeString, {
-              header: true,
+              header: false,
               dynamicTyping: true,
               skipEmptyLines: true,
               complete: (results) => {
-                console.log(results);
+                  const header = results.data[0] as Array<string>
+                  if (header[0] !== 'Header' || header[1] !== 'ComicMarketCD-ROMCatalog' || header[2] !== 'ComicMarket99') {
+                      alert("このファイルはC99のWebカタログのcsvではありません");
+                      return;
+                  }
+
+                  const body = results.data.slice(1);
+                  const result_csv_tmp = [];
+
+                  for (var row of body as Array<string>) {
+                      if (row[0] === "Circle") {
+                          const week = row[5];
+                          const house = row[6];
+                          const section = row[7];
+                          const number = row[8];
+                          const ab = row[21].toString() === "0" ? "a" : "b";
+                          const circle_name = row[10];
+                          const order_name = "笹松";
+
+                          const format_str = `${house}${section}${number}${ab}`;
+                          console.log(row[21]);
+                          result_csv_tmp.push([week, format_str, circle_name, "新刊", "", "1", order_name, ""])
+                      }
+                  }
+
+                  setResult(result_csv_tmp);
+                  setSummary([result_csv_tmp.length]);
               }
             }
         );
       } else {
-        console.log("csvエンコーディングが推測できません")
+          alert("csvエンコーディングが推測できません。不明なエンコード");
+          return;
       }
     }
     reader.readAsArrayBuffer(acceptedFiles[0]);
@@ -50,16 +81,26 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <div {...getRootProps()} style={style}>
-          <input {...getInputProps()} />
-          {
-            isDragActive ?
-                <p>Drop the files here ...</p> :
-                <p>CSVファイルをドラッグアンドドロップしてください</p>
-          }
+        <div>
+            {
+                summary[0] === 0 ?
+                    <div>WebカタログのCSVをアップロードして変換してください</div> :
+                    <div>
+                        <p>{summary[0]}件のサークルを変換しました</p>
+                        <CSVLink data={result}>CSVをダウンロードしてください</CSVLink>
+                    </div>
+            }
         </div>
-      </header>
+        <header className="App-header">
+            <div {...getRootProps()} style={style}>
+                <input {...getInputProps()} />
+                {
+                    isDragActive ?
+                        <p>ファイルをここに ...</p> :
+                        <p>CSVファイルをドラッグアンドドロップしてください</p>
+                }
+            </div>
+        </header>
     </div>
   );
 }
