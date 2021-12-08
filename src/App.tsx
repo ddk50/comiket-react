@@ -53,14 +53,14 @@ function App() {
                           const week = row[5];
                           const house = row[6];
                           const section = row[7];
-                          const number = row[8];
+                          const number = String(row[8]).padStart(2, '0');
                           const ab = row[21].toString() === "0" ? "a" : "b";
                           const circle_name = row[10];
                           const order_name = "笹松";
 
                           const format_str = `${house}${section}${number}${ab}`;
                           console.log(row[21]);
-                          result_csv_tmp.push([week, format_str, circle_name, "新刊", "", "1", order_name, ""])
+                          result_csv_tmp.push([week, format_str, circle_name, "新刊", "", order_name]);
                       }
                   }
 
