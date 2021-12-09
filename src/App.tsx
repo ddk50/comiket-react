@@ -1,12 +1,11 @@
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { CSVLink, CSVDownload } from 'react-csv';
+import { CSVLink } from 'react-csv';
 
 import Papa from 'papaparse';
 import Encoding from 'encoding-japanese';
 
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 
