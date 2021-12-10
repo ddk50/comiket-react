@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { CSVLink } from 'react-csv';
 
@@ -15,25 +14,35 @@ const style = {
   border: "1px dotted #888"
 };
 
-function App() {
+const App = () => {
   const [result, setResult] = React.useState([[""]]);
   const [summary, setSummary] = React.useState([0]);
+  const [orderName, setOrderName] = React.useState("");
 
-  const onDrop = useCallback((acceptedFiles) => {
-    const reader = new FileReader();
+  const reader = new FileReader();
 
-    reader.onload = () => {
+  const changeOrderName = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value
+      setOrderName(value);
+  };
+
+  reader.onloadend = (event) => {
+      if (orderName === "") {
+          alert("発注者が空欄です");
+          return;
+      }
+
       const codes = new Uint8Array(reader.result as ArrayBuffer);
       const encoding = Encoding.detect(codes);
 
       if (encoding !== false) {
-        const unicodeString = Encoding.convert(codes, {
-          to: 'UNICODE',
-          from: encoding,
-          type: 'string',
-        });
+          const unicodeString = Encoding.convert(codes, {
+              to: 'UNICODE',
+              from: encoding,
+              type: 'string',
+          });
 
-        Papa.parse(unicodeString, {
+          Papa.parse(unicodeString, {
               header: false,
               dynamicTyping: true,
               skipEmptyLines: true,
@@ -45,7 +54,7 @@ function App() {
                   }
 
                   const body = results.data.slice(1);
-                  const result_csv_tmp = [];
+                  const result_csv_tmp: Array<Array<string>> = []
 
                   for (var row of body as Array<string>) {
                       if (row[0] === "Circle") {
@@ -55,10 +64,9 @@ function App() {
                           const number = String(row[8]).padStart(2, '0');
                           const ab = row[21].toString() === "0" ? "a" : "b";
                           const circle_name = row[10];
-                          const order_name = "笹松";
+                          const order_name = orderName
 
                           const format_str = `${house}${section}${number}${ab}`;
-                          console.log(row[21]);
                           result_csv_tmp.push([week, format_str, circle_name, "新刊", "", order_name]);
                       }
                   }
@@ -66,29 +74,33 @@ function App() {
                   setResult(result_csv_tmp);
                   setSummary([result_csv_tmp.length]);
               }
-            }
-        );
+          });
       } else {
           alert("csvエンコーディングが推測できません。不明なエンコード");
           return;
       }
-    }
-    reader.readAsArrayBuffer(acceptedFiles[0]);
-  }, []);
+  };
+
+  const onDrop = (acceptedFiles: File[]) => {
+      reader.readAsArrayBuffer(acceptedFiles[0]);
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   return (
     <div className="App">
-        <div>
+        <div className="Msg">
             {
                 summary[0] === 0 ?
-                    <div>WebカタログのCSVをアップロードして変換してください</div> :
+                    <p>WebカタログのCSVをアップロードして変換してください</p> :
                     <div>
                         <p>{summary[0]}件のサークルを変換しました</p>
                         <CSVLink data={result}>CSVをダウンロードしてください</CSVLink>
                     </div>
             }
+        </div>
+        <div>
+            <input type="text" id="orderName" placeholder="発注者名" onChange={changeOrderName}/>
         </div>
         <header className="App-header">
             <div {...getRootProps()} style={style}>
@@ -96,7 +108,7 @@ function App() {
                 {
                     isDragActive ?
                         <p>ファイルをここに ...</p> :
-                        <p>CSVファイルをドラッグアンドドロップしてください</p>
+                        <p>ドラッグアンドドロップしてください</p>
                 }
             </div>
         </header>
