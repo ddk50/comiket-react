@@ -113,6 +113,7 @@ const App = () => {
   }
 
   const checkButtonHandler = (num: number) => {
+      setSummary([0]);
       if (checkedColors.has(num)) {
           checkedColors.delete(num);
       } else {
