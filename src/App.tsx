@@ -7,11 +7,7 @@ import Papa from 'papaparse';
 import Encoding from 'encoding-japanese';
 
 import TextField from "@material-ui/core/TextField";
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormControl from '@material-ui/core/FormControl';
-import FormLabel from '@material-ui/core/FormLabel';
+import { Checkbox } from "@material-ui/core";
 
 const style = {
   width: 200,
@@ -20,23 +16,23 @@ const style = {
 };
 
 const radioColors = [
-    {num: 0, label: "全部", checked: true},
-    {num: 1, label: "オレンジ"},
-    {num: 2, label: "ピンク"},
-    {num: 3, label: "黄"},
-    {num: 4, label: "緑"},
-    {num: 5, label: "水"},
-    {num: 6, label: "紫"},
-    {num: 7, label: "青"},
-    {num: 8, label: "黄緑"},
-    {num: 9, label: "赤"}
+    //{num: 0, code: "#ffffff", label: "全部", checked: true},
+    {num: 1, code: "#ff944a", label: "オレンジ"},
+    {num: 2, code: "#ff00ff", label: "ピンク"},
+    {num: 3, code: "#fff700", label: "黄"},
+    {num: 4, code: "#00b54a", label: "緑"},
+    {num: 5, code: "#00b5ff", label: "水"},
+    {num: 6, code: "#9c529c", label: "紫"},
+    {num: 7, code: "#0000ff", label: "青"},
+    {num: 8, code: "#00ff00", label: "黄緑"},
+    {num: 9, code: "#ff0000", label: "赤"}
 ];
 
 const App = () => {
   const [result, setResult] = React.useState([[""]]);
   const [summary, setSummary] = React.useState([0]);
   const [orderName, setOrderName] = React.useState("");
-  const [radioBoxColor, setRadioBoxColor] = React.useState(radioColors[0].num);
+  const [checkedColors, _] = React.useState(() => new Set<number>(radioColors.map(e => e.num)) );
 
   const reader = new FileReader();
 
@@ -78,7 +74,7 @@ const App = () => {
                   for (var row of body as Array<string>) {
                       if (row[0] === "Circle") {
                           const color = parseInt(row[2]);
-                          if (radioBoxColor === 0 || radioBoxColor === color) {
+                          if (isColorIncluded(color)) {
                               const week = row[5];
                               const house = row[6];
                               const section = row[7];
@@ -112,19 +108,28 @@ const App = () => {
       reader.readAsArrayBuffer(acceptedFiles[0]);
   };
 
-  const radioButtonHandler = (num: number) => {
-      setRadioBoxColor(num);
+  const isColorIncluded = (num: number): boolean => {
+      return checkedColors.has(num);
+  }
+
+  const checkButtonHandler = (num: number) => {
+      if (checkedColors.has(num)) {
+          checkedColors.delete(num);
+      } else {
+          checkedColors.add(num);
+      }
   }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
-  const radioGroups = radioColors.map(i =>
-      <FormControlLabel
+  const checkGroup = radioColors.map(i =>
+      <Checkbox
+          defaultChecked
           key={i.num.toString()}
-          value={i.num.toString()}
-          control={<Radio/>}
-          label={i.label.toString()}
-          onChange={() => radioButtonHandler(i.num)}
+          style = {{
+              color: i.code
+          }}
+          onChange={() => checkButtonHandler(i.num)}
       />
   );
 
@@ -152,11 +157,9 @@ const App = () => {
                 />
             </div>
             <div>
-                <FormControl component="fieldset">
-                    <RadioGroup row aria-label="color" name="row-radio-buttons-group">
-                        { radioGroups }
-                    </RadioGroup>
-                </FormControl>
+                <div>
+                    { checkGroup }
+                </div>
             </div>
         </div>
         <header className="App-header">
