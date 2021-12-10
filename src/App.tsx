@@ -1,5 +1,6 @@
 import { useDropzone } from 'react-dropzone';
 import { CSVLink } from 'react-csv';
+import TextField from "@material-ui/core/TextField";
 
 import Papa from 'papaparse';
 import Encoding from 'encoding-japanese';
@@ -100,7 +101,14 @@ const App = () => {
             }
         </div>
         <div>
-            <input type="text" id="orderName" placeholder="発注者名" onChange={changeOrderName}/>
+            <TextField
+                required
+                type="text"
+                id="orderName"
+                placeholder="発注者名"
+                onChange={changeOrderName}
+                variant="outlined"
+            />
         </div>
         <header className="App-header">
             <div {...getRootProps()} style={style}>
