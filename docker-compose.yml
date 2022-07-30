@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-    uprun_puma:
+    comiket_csv:
       build:
         context: ./
         dockerfile: ./containers/Dockerfile
@@ -8,17 +8,6 @@ services:
         - ./build:/var/www # persist builds
       networks:
         - web_network
-      restart: always
-    comiket_csv_nginx:
-      build:
-        context: ./
-        dockerfile: ./containers/Dockerfile
-      networks:
-        - web_network
-      volumes_from:
-        - comiket_csv_nginx
-      depends_on:
-        - comiket_csv_nginx
       restart: always
 
 networks:
