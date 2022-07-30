@@ -8,8 +8,8 @@
 # testing
 /coverage
 
-# production
 /build
+!/build/.keep
 
 # misc
 .DS_Store
@@ -24,3 +24,4 @@ yarn-error.log*
 
 .idea
 *~
+.*
