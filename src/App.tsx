@@ -70,9 +70,9 @@ function App() {
           if (
             header[0] !== "Header" ||
             header[1] !== "ComicMarketCD-ROMCatalog" ||
-            header[2] !== "ComicMarket99"
+            header[2] !== "ComicMarket100"
           ) {
-            alert("このファイルはC99のWebカタログのcsvではありません");
+            alert("このファイルはC100のWebカタログのcsvではありません");
             return;
           }
 
