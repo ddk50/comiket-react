@@ -1,73 +1,53 @@
-import express from 'express';
-import cors from 'cors';
-import {
-  checkExistDir,
-  checkExistFile,
-  createFolderIfNotExist, deleteAllDirs, deleteAllFiles,
-  uploadSingleFile
-} from './driveutils';
+import express from "express";
+import cors from "cors";
+import multer from "multer";
+import { uploadCSVFile } from "./driveutils";
 
 const app = express();
 const port = 3000;
 
 app.use(cors());
 interface MyResponse {
-    message: string;
+  message: string;
 }
+
 function createMessage(myMessage: string): MyResponse {
   const myResponse = {
     message: myMessage,
   };
   return myResponse;
 }
-app.get('/', (req: express.Request, res: express.Response) => {
-  const msg = createMessage('Hello World!');
+
+app.get("/", (req: express.Request, res: express.Response) => {
+  const msg = createMessage("Hello World!");
   res.send(msg.message);
 });
 
-app.get('/upload', (req: express.Request, res: express.Response) => {
-  uploadSingleFile().then((msg: string) => {
-    res.send({
-      message: msg,
-    });
-  });
-});
+app.post(
+  "/upload",
+  multer({ dest: "tmp/" }).single("file"),
+  (req: express.Request, res: express.Response) => {
+    const { filename } = req.body;
 
-function csvExists(employeeName: string, eventName: string) {
+    if (!req.file) {
+      res.status(400).send({
+        message: "must be specific a file",
+      });
+      return;
+    }
 
-}
-
-app.get('/checkFile', (req: express.Request, res: express.Response) => {
-  checkExistFile('高橋一志', '1iUFKPD8Tekmmj5McpiZKUhQjOlBckxSw').then(() => {
-    res.send({
-      message: 'ok',
-    });
-  });
-});
-
-app.get('/checkDir', (req: express.Request, res: express.Response) => {
-  checkExistDir('高橋一志').then(() => {
-    res.send({
-      message: 'ok',
-    });
-  });
-});
-
-app.get('/deleteAllFiles', (req: express.Request, res: express.Response) => {
-  deleteAllFiles().then(() => {
-    res.send({
-      message: 'ok',
-    });
-  });
-});
-
-// app.get('/deleteAllDirs', (req: express.Request, res: express.Response) => {
-//   deleteAllDirs().then(() => {
-//     res.send({
-//       message: 'ok',
-//     });
-//   });
-// });
+    try {
+      uploadCSVFile(req.file.path, "たかはし", "C101", "生協");
+      res.status(200).send({
+        message: "file uploaded",
+      });
+    } catch (err) {
+      res.status(400).send({
+        message: err,
+      });
+    }
+  }
+);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

@@ -29,3 +29,7 @@ yarn-error.log*
 !/key/.keep
 
 /src/files
+
+/tmp
+!/tmp/.keep
+
