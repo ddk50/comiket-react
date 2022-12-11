@@ -3,11 +3,13 @@ import "./App.css";
 
 import { useDropzone } from "react-dropzone";
 import { CSVLink } from "react-csv";
+import axios from "axios";
 import Papa from "papaparse";
 import Encoding from "encoding-japanese";
 
 import TextField from "@material-ui/core/TextField";
 import { Checkbox } from "@material-ui/core";
+import { isSafari, toCSV } from "./libs/csv";
 
 const style = {
   width: 200,
@@ -28,9 +30,25 @@ const radioColors = [
   { num: 9, code: "#ff0000", label: "赤" },
 ];
 
+function makeCSVFormData(csvData: Array<Array<string>>): FormData {
+  const separator = ",";
+  const filename = "generatedBy_react-csv.csv";
+  const uFEFF = true;
+  const enclosingCharacter = '"';
+
+  const csv = toCSV(csvData, [], separator, enclosingCharacter);
+  const type = isSafari() ? "application/csv" : "text/csv";
+  const blob = new Blob([uFEFF ? "\uFEFF" : "", csv], { type });
+
+  const formData = new FormData();
+  formData.append("file", new File([blob], filename));
+
+  return formData;
+}
+
 function App() {
-  const [result, setResult] = React.useState([[""]]);
-  const [summary, setSummary] = React.useState([0]);
+  const [result, setResult] = React.useState(false);
+  const [summary, setSummary] = React.useState(0);
   const [orderName, setOrderName] = React.useState("");
   const [checkedColors, _] = React.useState(
     () => new Set<number>(radioColors.map((e) => e.num))
@@ -46,15 +64,20 @@ function App() {
   const isColorIncluded = (num: number): boolean => checkedColors.has(num);
 
   reader.onloadend = (event) => {
-    if (orderName === "") {
-      alert("発注者が空欄です");
-      return;
-    }
+    try {
+      if (orderName === "") {
+        throw new Error("発注者が空欄です");
+      }
 
-    const codes = new Uint8Array(reader.result as ArrayBuffer);
-    const encoding = Encoding.detect(codes);
+      const codes = new Uint8Array(reader.result as ArrayBuffer);
+      const encoding = Encoding.detect(codes);
 
-    if (encoding !== false) {
+      if (encoding === false) {
+        throw new Error(
+          "csvエンコーディングが推測できません。不明なエンコード"
+        );
+      }
+
       const unicodeString = Encoding.convert(codes, {
         to: "UNICODE",
         from: encoding,
@@ -67,14 +90,15 @@ function App() {
         skipEmptyLines: true,
         complete: (results) => {
           const header = results.data[0] as Array<string>;
-          if (
-            header[0] !== "Header" ||
-            header[1] !== "ComicMarketCD-ROMCatalog" ||
-            header[2] !== "ComicMarket100"
-          ) {
-            alert("このファイルはC100のWebカタログのcsvではありません");
-            return;
-          }
+          // if (
+          //   header[0] !== "Header" ||
+          //   header[1] !== "ComicMarketCD-ROMCatalog" ||
+          //   header[2] !== "ComicMarket100"
+          // ) {
+          //   throw new Error(
+          //     "このファイルはC100のWebカタログのcsvではありません"
+          //   );
+          // }
 
           const body = results.data.slice(1);
           const result_csv_tmp: Array<Array<string>> = [];
@@ -106,16 +130,23 @@ function App() {
           }
 
           if (result_csv_tmp.length <= 0) {
-            alert("該当するサークルはゼロです。選択した”色”は正しいですか？");
-            return;
+            throw new Error(
+              "該当するサークルはゼロです。選択した”色”は正しいですか？"
+            );
           }
 
-          setResult(result_csv_tmp);
-          setSummary([result_csv_tmp.length]);
+          const params = makeCSVFormData(result_csv_tmp);
+          axios
+            .post("http://localhost:3000/upload", params)
+            .then(() => {
+              setResult(true);
+              setSummary(result_csv_tmp.length);
+            })
+            .catch((err) => alert(err));
         },
       });
-    } else {
-      alert("csvエンコーディングが推測できません。不明なエンコード");
+    } catch (err) {
+      alert(err);
     }
   };
 
@@ -124,7 +155,7 @@ function App() {
   };
 
   const checkButtonHandler = (num: number) => {
-    setSummary([0]);
+    setSummary(0);
     if (checkedColors.has(num)) {
       checkedColors.delete(num);
     } else {
@@ -148,15 +179,14 @@ function App() {
   return (
     <div className="App">
       <div className="Msg">
-        {summary[0] === 0 ? (
+        {summary === 0 ? (
           <p>WebカタログのCSVをアップロードして変換してください</p>
         ) : (
           <div>
             <p>
-              {summary[0]}
-              件のサークルを変換しました
+              {summary}
+              件のサークルを提出しました。お疲れ様です！
             </p>
-            <CSVLink data={result}>CSVをダウンロードしてください</CSVLink>
           </div>
         )}
       </div>
