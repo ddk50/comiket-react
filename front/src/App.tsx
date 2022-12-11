@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
+import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
 import { useDropzone } from "react-dropzone";
-import { CSVLink } from "react-csv";
 import axios from "axios";
 import Papa from "papaparse";
 import Encoding from "encoding-japanese";
+import { toast, ToastContainer } from "react-toastify";
 
 import TextField from "@material-ui/core/TextField";
 import { Checkbox } from "@material-ui/core";
@@ -30,7 +31,10 @@ const radioColors = [
   { num: 9, code: "#ff0000", label: "赤" },
 ];
 
-function makeCSVFormData(csvData: Array<Array<string>>): FormData {
+function makeCSVFormData(
+  csvData: Array<Array<string>>,
+  orderName: string
+): FormData {
   const separator = ",";
   const filename = "generatedBy_react-csv.csv";
   const uFEFF = true;
@@ -42,11 +46,13 @@ function makeCSVFormData(csvData: Array<Array<string>>): FormData {
 
   const formData = new FormData();
   formData.append("file", new File([blob], filename));
+  formData.append("orderName", orderName);
 
   return formData;
 }
 
 function App() {
+  const [toastMessage, setToastMessage] = React.useState<string>("");
   const [result, setResult] = React.useState(false);
   const [summary, setSummary] = React.useState(0);
   const [orderName, setOrderName] = React.useState("");
@@ -65,6 +71,8 @@ function App() {
 
   reader.onloadend = (event) => {
     try {
+      const toastId = toast.loading("アップロード中です");
+
       if (orderName === "") {
         throw new Error("発注者が空欄です");
       }
@@ -135,12 +143,18 @@ function App() {
             );
           }
 
-          const params = makeCSVFormData(result_csv_tmp);
+          const params = makeCSVFormData(result_csv_tmp, orderName);
           axios
             .post("http://localhost:3000/upload", params)
             .then(() => {
               setResult(true);
               setSummary(result_csv_tmp.length);
+
+              toast.update(toastId, {
+                render: "All is good",
+                type: "success",
+                isLoading: false,
+              });
             })
             .catch((err) => alert(err));
         },
@@ -179,6 +193,20 @@ function App() {
   return (
     <div className="App">
       <div className="Msg">
+        <div>
+          <ToastContainer
+            position="top-center"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
+        </div>
         {summary === 0 ? (
           <p>WebカタログのCSVをアップロードして変換してください</p>
         ) : (

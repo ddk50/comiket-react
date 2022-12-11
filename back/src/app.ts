@@ -27,7 +27,8 @@ app.post(
   "/upload",
   multer({ dest: "tmp/" }).single("file"),
   (req: express.Request, res: express.Response) => {
-    const { filename } = req.body;
+    console.log(req);
+    const { orderName } = req.body;
 
     if (!req.file) {
       res.status(400).send({
@@ -37,7 +38,7 @@ app.post(
     }
 
     try {
-      uploadCSVFile(req.file.path, "たかはし", "C101", "生協");
+      uploadCSVFile(req.file.path, orderName, "C101", "生協");
       res.status(200).send({
         message: "file uploaded",
       });
