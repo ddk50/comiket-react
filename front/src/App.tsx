@@ -18,6 +18,8 @@ const style = {
   border: "1px dotted #888",
 };
 
+const apiURL = process.env.COMIKET_API_URL || "http://localhost:3000/upload";
+
 const radioColors = [
   // {num: 0, code: "#ffffff", label: "全部", checked: true},
   { num: 1, code: "#ff944a", label: "オレンジ" },
@@ -52,7 +54,8 @@ function makeCSVFormData(
 }
 
 function App() {
-  const [toastMessage, setToastMessage] = React.useState<string>("");
+  const [toastMessage, setToastMessage] = React.useState(["info", ""]);
+  const [toastId, setToastId] = React.useState<any>(undefined);
   const [result, setResult] = React.useState(false);
   const [summary, setSummary] = React.useState(0);
   const [orderName, setOrderName] = React.useState("");
@@ -69,12 +72,90 @@ function App() {
 
   const isColorIncluded = (num: number): boolean => checkedColors.has(num);
 
-  reader.onloadend = (event) => {
+  React.useEffect(() => {
+    if (!toastId) {
+      if (toastMessage[1] !== "") {
+        setToastId(toast.loading(toastMessage[1]));
+      }
+    } else {
+      switch (toastMessage[0]) {
+        case "start": {
+          toast.loading(toastMessage[1], {
+            position: "top-center",
+          });
+          break;
+        }
+        case "info": {
+          toast.update(toastId, {
+            render: toastMessage[1],
+            position: "top-center",
+            autoClose: false,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            isLoading: false,
+            theme: "light",
+          });
+          break;
+        }
+        case "success": {
+          toast.update(toastId, {
+            render: toastMessage[1],
+            type: "success",
+            position: "top-center",
+            autoClose: false,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            isLoading: false,
+            theme: "colored",
+          });
+          break;
+        }
+        case "error": {
+          toast.update(toastId, {
+            render: toastMessage[1],
+            type: "error",
+            position: "top-center",
+            autoClose: false,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            isLoading: false,
+            theme: "colored",
+          });
+          break;
+        }
+        default: {
+          toast.error(toastMessage[1], {
+            position: "top-center",
+            autoClose: false,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            isLoading: false,
+            theme: "colored",
+          });
+          break;
+        }
+      }
+    }
+  }, [toastMessage]);
+
+  reader.onloadend = (_event) => {
     try {
-      const toastId = toast.loading("アップロード中です");
+      setToastMessage(["start", "変換開始"]);
 
       if (orderName === "") {
-        throw new Error("発注者が空欄です");
+        throw new Error("お兄ちゃん！発注者が空欄だよ！");
       }
 
       const codes = new Uint8Array(reader.result as ArrayBuffer);
@@ -82,7 +163,7 @@ function App() {
 
       if (encoding === false) {
         throw new Error(
-          "csvエンコーディングが推測できません。不明なエンコード"
+          "お兄ちゃん！csvエンコーディングが推測できないよ！不明なエンコードです"
         );
       }
 
@@ -139,28 +220,32 @@ function App() {
 
           if (result_csv_tmp.length <= 0) {
             throw new Error(
-              "該当するサークルはゼロです。選択した”色”は正しいですか？"
+              "お兄ちゃん！発注数はゼロだよ！選択した”色”は正しいの？"
             );
           }
 
           const params = makeCSVFormData(result_csv_tmp, orderName);
           axios
-            .post("http://localhost:3000/upload", params)
+            .post(apiURL, params)
             .then(() => {
               setResult(true);
               setSummary(result_csv_tmp.length);
 
-              toast.update(toastId, {
-                render: "All is good",
-                type: "success",
-                isLoading: false,
-              });
+              setToastMessage([
+                "success",
+                `${result_csv_tmp.length} 件のサークルを提出しました。お疲れ様ですお兄ちゃん！`,
+              ]);
+              setToastId(undefined);
             })
-            .catch((err) => alert(err));
+            .catch((err) => {
+              setToastMessage(["error", `${err}`]);
+              setToastId(undefined);
+            });
         },
       });
     } catch (err) {
-      alert(err);
+      setToastMessage(["error", `${err}`]);
+      setToastId(undefined);
     }
   };
 
@@ -194,29 +279,8 @@ function App() {
     <div className="App">
       <div className="Msg">
         <div>
-          <ToastContainer
-            position="top-center"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
+          <ToastContainer />
         </div>
-        {summary === 0 ? (
-          <p>WebカタログのCSVをアップロードして変換してください</p>
-        ) : (
-          <div>
-            <p>
-              {summary}
-              件のサークルを提出しました。お疲れ様です！
-            </p>
-          </div>
-        )}
       </div>
       <div>
         <div>

@@ -4,7 +4,7 @@ import multer from "multer";
 import { uploadCSVFile } from "./driveutils";
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(cors());
 interface MyResponse {
@@ -27,7 +27,6 @@ app.post(
   "/upload",
   multer({ dest: "tmp/" }).single("file"),
   (req: express.Request, res: express.Response) => {
-    console.log(req);
     const { orderName } = req.body;
 
     if (!req.file) {
