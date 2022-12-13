@@ -37,7 +37,7 @@ app.post(
     }
 
     try {
-      uploadCSVFile(req.file.path, orderName, "C101", "生協");
+      uploadCSVFile(req.file.path, orderName, "リスト", "C101");
       res.status(200).send({
         message: "file uploaded",
       });
