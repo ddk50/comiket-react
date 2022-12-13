@@ -75,7 +75,11 @@ function App() {
   React.useEffect(() => {
     if (!toastId) {
       if (toastMessage[1] !== "") {
-        setToastId(toast.loading(toastMessage[1]));
+        setToastId(
+          toast.loading(toastMessage[1], {
+            position: "top-center",
+          })
+        );
       }
     } else {
       switch (toastMessage[0]) {
