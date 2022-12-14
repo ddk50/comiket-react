@@ -56,8 +56,6 @@ function makeCSVFormData(
 function App() {
   const [toastMessage, setToastMessage] = React.useState(["info", ""]);
   const [toastId, setToastId] = React.useState<any>(undefined);
-  const [result, setResult] = React.useState(false);
-  const [summary, setSummary] = React.useState(0);
   const [orderName, setOrderName] = React.useState("");
   const [checkedColors, _] = React.useState(
     () => new Set<number>(radioColors.map((e) => e.num))
@@ -232,9 +230,6 @@ function App() {
           axios
             .post(apiURL, params)
             .then(() => {
-              setResult(true);
-              setSummary(result_csv_tmp.length);
-
               setToastMessage([
                 "success",
                 `${result_csv_tmp.length} 件のサークルを提出しました。お疲れ様ですお兄ちゃん！`,
@@ -258,7 +253,6 @@ function App() {
   };
 
   const checkButtonHandler = (num: number) => {
-    setSummary(0);
     if (checkedColors.has(num)) {
       checkedColors.delete(num);
     } else {
