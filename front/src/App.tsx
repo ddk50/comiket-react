@@ -203,7 +203,7 @@ function App() {
             header[2] !== "ComicMarket101"
           ) {
             throw new Error(
-              "このファイルはC100のWebカタログのcsvじゃないみたいだよ！お兄ちゃん！"
+              "このファイルはC101のWebカタログのcsvじゃないみたいだよ！お兄ちゃん！"
             );
           }
 
