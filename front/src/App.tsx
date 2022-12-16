@@ -33,21 +33,36 @@ const radioColors = [
   { num: 9, code: "#ff0000", label: "赤" },
 ];
 
-function makeCSVFormData(
-  csvData: Array<Array<string>>,
-  orderName: string
-): FormData {
+function makeCSVBlobFromArrays(
+  csvArray: Array<Array<string>>,
+  header: Array<string> = []
+): Blob {
   const separator = ",";
-  const filename = "generatedBy_react-csv.csv";
   const uFEFF = true;
   const enclosingCharacter = '"';
 
-  const csv = toCSV(csvData, [], separator, enclosingCharacter);
+  const innerHeader = header.length === 0 ? null : header;
+
+  const csv = toCSV(csvArray, innerHeader, separator, enclosingCharacter);
   const type = isSafari() ? "application/csv" : "text/csv";
   const blob = new Blob([uFEFF ? "\uFEFF" : "", csv], { type });
 
+  return blob;
+}
+
+function makeCSVFormData(
+  csvListData: Array<Array<string>>,
+  csvListHeader: Array<string>,
+  csvMapData: Array<Array<string>>,
+  csvMapHeader: Array<string>,
+  orderName: string
+): FormData {
+  const listCSVBlob = makeCSVBlobFromArrays(csvListData, csvListHeader);
+  const mapCSVBlob = makeCSVBlobFromArrays(csvMapData, csvMapHeader);
+
   const formData = new FormData();
-  formData.append("file", new File([blob], filename));
+  formData.append("listCSVFile", new File([listCSVBlob], "list.csv"));
+  formData.append("mapCSVFile", new File([mapCSVBlob], "map.csv"));
   formData.append("orderName", orderName);
 
   return formData;
@@ -157,7 +172,7 @@ function App() {
       setToastMessage(["start", "変換開始"]);
 
       if (orderName === "") {
-        throw new Error("お兄ちゃん！発注者が空欄だよ！");
+        throw new Error("発注者が空欄だよ！お兄ちゃん！");
       }
 
       const codes = new Uint8Array(reader.result as ArrayBuffer);
@@ -165,7 +180,7 @@ function App() {
 
       if (encoding === false) {
         throw new Error(
-          "お兄ちゃん！csvエンコーディングが推測できないよ！不明なエンコードです"
+          "csvエンコーディングが推測できないよ！不明なエンコードだよお兄ちゃん！"
         );
       }
 
@@ -181,21 +196,22 @@ function App() {
         skipEmptyLines: true,
         complete: (results) => {
           const header = results.data[0] as Array<string>;
-          // if (
-          //   header[0] !== "Header" ||
-          //   header[1] !== "ComicMarketCD-ROMCatalog" ||
-          //   header[2] !== "ComicMarket100"
-          // ) {
-          //   throw new Error(
-          //     "このファイルはC100のWebカタログのcsvではありません"
-          //   );
-          // }
+          if (
+            header[0] !== "Header" ||
+            header[1] !== "ComicMarketCD-ROMCatalog" ||
+            header[2] !== "ComicMarket101"
+          ) {
+            throw new Error(
+              "このファイルはC100のWebカタログのcsvじゃないみたいだよ！お兄ちゃん！"
+            );
+          }
 
           const body = results.data.slice(1);
-          const result_csv_tmp: Array<Array<string>> = [];
+          const result_csv_list: Array<Array<string>> = [];
+          const result_csv_map: Array<Array<string>> = [];
 
           // eslint-disable-next-line no-restricted-syntax
-          for (const row of body as Array<string>) {
+          for (const row of body as Array<Array<string>>) {
             if (row[0] === "Circle") {
               const color = parseInt(row[2], 10);
               if (isColorIncluded(color)) {
@@ -207,8 +223,10 @@ function App() {
                 const circle_name = row[10];
                 const order_name = orderName;
 
+                result_csv_map.push(row);
+
                 const format_str = `${house}${section}${number}${ab}`;
-                result_csv_tmp.push([
+                result_csv_list.push([
                   week,
                   format_str,
                   circle_name,
@@ -220,19 +238,26 @@ function App() {
             }
           }
 
-          if (result_csv_tmp.length <= 0) {
+          if (result_csv_list.length <= 0) {
             throw new Error(
-              "お兄ちゃん！発注数はゼロだよ！選択した”色”は正しいの？"
+              "発注数はゼロだけど大丈夫？”色”をちゃんと選択してる？"
             );
           }
 
-          const params = makeCSVFormData(result_csv_tmp, orderName);
+          const params = makeCSVFormData(
+            result_csv_list,
+            [],
+            result_csv_map,
+            header,
+            orderName
+          );
+
           axios
             .post(apiURL, params)
             .then(() => {
               setToastMessage([
                 "success",
-                `${result_csv_tmp.length} 件のサークルを提出しました。お疲れ様ですお兄ちゃん！`,
+                `${result_csv_list.length} 件のサークルを提出しました。お疲れ様ですお兄ちゃん！`,
               ]);
               setToastId(undefined);
             })
