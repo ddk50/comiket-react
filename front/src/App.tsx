@@ -230,7 +230,6 @@ function App() {
                   week,
                   format_str,
                   circle_name,
-                  "新刊",
                   "",
                   order_name,
                 ]);
