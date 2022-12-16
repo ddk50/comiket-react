@@ -8,8 +8,6 @@ services:
         - ./build:/var/www # persist builds
       networks:
         - web_network
-      environment:
-        - COMIKET_API_URL=https://comiketapi.upfg.net/upload
       restart: always
 
 networks:

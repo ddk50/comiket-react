@@ -18,7 +18,8 @@ const style = {
   border: "1px dotted #888",
 };
 
-const apiURL = process.env.COMIKET_API_URL || "http://localhost:3000/upload";
+const apiURL =
+  process.env.REACT_APP_COMIKET_API_URL || "http://localhost:3000/upload";
 
 const radioColors = [
   // {num: 0, code: "#ffffff", label: "全部", checked: true},
