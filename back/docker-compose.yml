@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+    comiketapi_csv:
+      build:
+        context: ./
+        dockerfile: ./containers/Dockerfile
+      environment:
+        - PORT=80
+      networks:
+       - web_network
+      restart: always
+      
+networks:
+ web_network:
+   external: true
