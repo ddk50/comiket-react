@@ -16,4 +16,4 @@ dockerですぐつくれる
 $ yarn build
 $ docker-compose -f docker-compose.yml up -d
 ```
-これでnginxがあがってくる
+これでnginxがあがってきて、`./build`ディレクトリにあるbuild済みのフロントエンドが公開される。
