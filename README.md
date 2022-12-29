@@ -8,3 +8,4 @@ React＋TypeScriptで書いてある
 
 ### backend
 TypeScript（Webフレームワークはexpress）で書かれてる
+[README.md](./back/README.md)
