@@ -34,6 +34,8 @@ const radioColors = [
   { num: 9, code: "#ff0000", label: "赤" },
 ];
 
+const integrateColorNumber = "1";
+
 function makeCSVBlobFromArrays(
   csvArray: Array<Array<string>>,
   header: Array<string> = []
@@ -67,6 +69,15 @@ function makeCSVFormData(
   formData.append("orderName", orderName);
 
   return formData;
+}
+
+function changeRowColor(
+  row: Array<string>,
+  changeColor = integrateColorNumber
+): Array<string> {
+  return row.map((col: string, index: number) => {
+    return index === 2 ? changeColor : col;
+  });
 }
 
 function App() {
@@ -224,7 +235,7 @@ function App() {
                 const circle_name = row[10];
                 const order_name = orderName;
 
-                result_csv_map.push(row);
+                result_csv_map.push(changeRowColor(row));
 
                 const format_str = `${house}${section}${number}${ab}`;
                 result_csv_list.push([
