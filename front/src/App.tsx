@@ -235,16 +235,15 @@ function App() {
                 const circle_name = row[10];
                 const order_name = orderName;
 
-                // オレンジ(1)を探す
-                const val = radioColors.find((hash) => hash.num === 1);
-
+                // 色の名前を探す
+                const val = radioColors.find((hash) => hash.num === color);
                 if (val === undefined) {
                   throw new Error(
-                    "コードエラー: 内部の色指定がおかしいです。開発者に連絡してください"
+                    `不明な色コードが存在します: ${color}, ${row}`
                   );
                 }
 
-                const check_color = val.label.toString();
+                const color_name = val.label.toString();
 
                 result_csv_map.push(changeRowColor(row));
 
@@ -255,7 +254,7 @@ function App() {
                   circle_name,
                   "",
                   order_name,
-                  check_color,
+                  color_name,
                 ]);
               }
             }
