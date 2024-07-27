@@ -211,10 +211,10 @@ function App() {
           if (
             header[0] !== "Header" ||
             header[1] !== "ComicMarketCD-ROMCatalog" ||
-            header[2] !== "ComicMarket103"
+            header[2] !== "ComicMarket104"
           ) {
             throw new Error(
-              "このファイルはC103のWebカタログのcsvじゃないみたいだよ！お兄ちゃん！"
+              "このファイルはC104のWebカタログのcsvじゃないみたいだよ！お兄ちゃん！"
             );
           }
 
@@ -239,7 +239,7 @@ function App() {
                 const val = radioColors.find((hash) => hash.num === color);
                 if (val === undefined) {
                   throw new Error(
-                    `不明な色コードが存在します: ${color}, ${row}`
+                    `不明な色コードが存在します: ${color},${row}`
                   );
                 }
 
