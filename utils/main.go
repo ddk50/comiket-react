@@ -13,8 +13,8 @@ import (
 	"syscall"
 )
 
-var re = regexp.MustCompile(`"Header","ComicMarketCD-ROMCatalog","ComicMarket\d+","UTF-8","Web 1\.\d+\.1"`)
-var newHeader = "Header,ComicMarketCD-ROMCatalog,ComicMarket102,UTF-8,Web 1.101.1"
+var re = regexp.MustCompile(`Header,ComicMarketCD-ROMCatalog,ComicMarket\d+,UTF-8,Web 1\.\d+\.1`)
+var newHeader = "Header,ComicMarketCD-ROMCatalog,ComicMarket104,UTF-8,Web 1.101.1"
 
 func UTF16PtrFromString(s string) *uint16 {
 	result, _ := syscall.UTF16PtrFromString(s)
