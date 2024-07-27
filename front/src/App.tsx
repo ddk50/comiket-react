@@ -38,7 +38,8 @@ const integrateColorNumber = "1";
 
 function makeCSVBlobFromArrays(
   csvArray: Array<Array<string>>,
-  header: Array<string> = []
+  header: Array<string> = [],
+  headerWithoutEnclosingChar: Boolean = false
 ): Blob {
   const separator = ",";
   const uFEFF = true;
@@ -46,7 +47,13 @@ function makeCSVBlobFromArrays(
 
   const innerHeader = header.length === 0 ? null : header;
 
-  const csv = toCSV(csvArray, innerHeader, separator, enclosingCharacter);
+  const csv = toCSV(
+    csvArray,
+    innerHeader,
+    separator,
+    enclosingCharacter,
+    headerWithoutEnclosingChar
+  );
   const type = isSafari() ? "application/csv" : "text/csv";
   const blob = new Blob([uFEFF ? "\uFEFF" : "", csv], { type });
 
@@ -61,7 +68,9 @@ function makeCSVFormData(
   orderName: string
 ): FormData {
   const listCSVBlob = makeCSVBlobFromArrays(csvListData, csvListHeader);
-  const mapCSVBlob = makeCSVBlobFromArrays(csvMapData, csvMapHeader);
+
+  // mapCSVのほうはヘッダーにダブルクオーテーションをつけてはいけない（コミケソフトで読めなくなる）
+  const mapCSVBlob = makeCSVBlobFromArrays(csvMapData, csvMapHeader, true);
 
   const formData = new FormData();
   formData.append("listCSVFile", new File([listCSVBlob], "list.csv"));
