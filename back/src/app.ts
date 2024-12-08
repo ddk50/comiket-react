@@ -49,8 +49,8 @@ app.post(
       console.log(`${listCSV[0].path}`);
       console.log(`${mapCSV[0].path}`);
 
-      await uploadCSVFile(listCSV[0].path, orderName, "リスト", "C104");
-      await uploadCSVFile(mapCSV[0].path, orderName, "地図", "C104");
+      await uploadCSVFile(listCSV[0].path, orderName, "リスト", "C105");
+      await uploadCSVFile(mapCSV[0].path, orderName, "地図", "C105");
 
       res.status(200).send({
         message: "file uploaded",

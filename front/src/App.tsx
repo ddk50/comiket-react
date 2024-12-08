@@ -220,10 +220,10 @@ function App() {
           if (
             header[0] !== "Header" ||
             header[1] !== "ComicMarketCD-ROMCatalog" ||
-            header[2] !== "ComicMarket104"
+            header[2] !== "ComicMarket105"
           ) {
             throw new Error(
-              "このファイルはC104のWebカタログのcsvじゃないみたいだよ！お兄ちゃん！"
+              "このファイルはC105のWebカタログのcsvじゃないみたいだよ！お兄ちゃん！"
             );
           }
 
