@@ -8,8 +8,8 @@ import Papa from "papaparse";
 import Encoding from "encoding-japanese";
 import { toast, ToastContainer } from "react-toastify";
 
-import TextField from "@material-ui/core/TextField";
-import { Checkbox } from "@material-ui/core";
+import { TextField, Checkbox } from "@mui/material";
+
 import { isSafari, toCSV } from "./libs/csv";
 
 const style = {
