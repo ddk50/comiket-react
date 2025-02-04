@@ -353,7 +353,7 @@ function App() {
       </div>
       <header className="App-header">
         <div {...getRootProps()} style={style}>
-          <input {...getInputProps()} />
+          <input {...getInputProps()} data-testid="csv-fileinput" />
           {isDragActive ? (
             <p>ファイルをここに ...</p>
           ) : (

@@ -35,6 +35,10 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "jest": {
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"],
+    "testEnvironment": "jsdom"
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
