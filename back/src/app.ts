@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import multer from "multer";
 import { uploadCSVFile } from "./driveutils";
+import { getOrderSubmittersFromSheet } from "./spreadutils";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -63,6 +64,28 @@ app.post(
     }
   }
 );
+
+app.get("/order-submitters", async (req, res) => {
+  const spreadsheetId = "1L-YdL8OBbrB1aUbyYS6TNVR-F0ddUNJTftK5aRM4BvI";
+  const sheetName = "名簿";
+
+  if (!spreadsheetId || !sheetName) {
+    return res.status(400).json({
+      error: "Missing required query parameters: spreadsheetId, sheetName",
+    });
+  }
+
+  try {
+    const orderSubmitters = await getOrderSubmittersFromSheet(
+      spreadsheetId,
+      sheetName
+    );
+    res.status(200).json({ orderSubmitters });
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).json({ error: "Failed to fetch data from Google Sheets" });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
