@@ -83,7 +83,9 @@ app.get("/order-submitters", async (req, res) => {
     res.status(200).json({ orderSubmitters });
   } catch (error) {
     console.error("Error fetching data:", error);
-    res.status(500).json({ error: "Failed to fetch data from Google Sheets" });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch data from Google Sheets" });
   }
 });
 
