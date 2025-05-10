@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
@@ -8,9 +8,10 @@ import Papa from "papaparse";
 import Encoding from "encoding-japanese";
 import { toast, ToastContainer } from "react-toastify";
 
-import { TextField, Checkbox } from "@mui/material";
+import { TextField, Checkbox, FormControl, FormLabel, FormHelperText, FormGroup } from "@mui/material";
 
 import { isSafari, toCSV } from "./libs/csv";
+import NameDropdown from "./InputName";
 
 const style = {
   width: 200,
@@ -96,6 +97,11 @@ function App() {
   const [checkedColors, _] = React.useState(
     () => new Set<number>(radioColors.map((e) => e.num))
   );
+
+  // APIでエラーが出たばあい、操作を無効化するときに使う
+  // いまは登録者一覧が取れなかったら操作を完全に無効化（それ以上の操作は意味ないから）
+  // するときに使ってる
+  const [isDisabled, setIsDisabled] = React.useState(false);
 
   const reader = new FileReader();
 
@@ -331,38 +337,55 @@ function App() {
 
   return (
     <div className="App">
-      <div className="Msg">
-        <div>
-          <ToastContainer />
+      <ToastContainer />
+      <div className={`form-container ${isDisabled ? 'disabled' : ''}`}>
+        <div className="form-container">
+          {/* NameDropdown 追加 */}
+          <FormControl fullWidth margin="normal">
+            <FormLabel className="form-label-left">登録済みのお名前</FormLabel>
+            <NameDropdown onSelect={(name) => setOrderName(name)} onError={() => setIsDisabled(true)} />
+            <FormHelperText>既に登録されているお名前を選択することもできます。</FormHelperText>
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <FormLabel className="form-label-left">お名前</FormLabel>
+            <TextField
+              required
+              type="text"
+              id="orderName"
+              placeholder="発注者名"
+              onChange={changeOrderName}
+              variant="outlined"
+              fullWidth
+            />
+            <FormHelperText>この発注処理を行う方のお名前を入力してください。</FormHelperText>
+          </FormControl>
+
+          <FormControl component="fieldset" fullWidth margin="normal">
+            <FormLabel className="form-label-left">サークル色の選択</FormLabel>
+            <FormHelperText>処理対象とするサークルの色を選択してください。（複数選択可）</FormHelperText>
+            <FormGroup row>
+              {checkGroup}
+            </FormGroup>
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <FormLabel className="form-label-left">ファイルアップロード</FormLabel>
+            <div {...getRootProps()} style={style}>
+              <input {...getInputProps()} data-testid="csv-fileinput" />
+              {isDragActive ? (
+                <p>ファイルをここに ...</p>
+              ) : (
+                <p>ドラッグアンドドロップしてください</p>
+              )}
+            </div>
+            <FormHelperText>下記エリアにCSVファイルをドラッグアンドドロップしてください。</FormHelperText>
+          </FormControl>
         </div>
       </div>
-      <div>
-        <div>
-          <TextField
-            required
-            type="text"
-            id="orderName"
-            placeholder="発注者名"
-            onChange={changeOrderName}
-            variant="outlined"
-          />
-        </div>
-        <div>
-          <div>{checkGroup}</div>
-        </div>
-      </div>
-      <header className="App-header">
-        <div {...getRootProps()} style={style}>
-          <input {...getInputProps()} data-testid="csv-fileinput" />
-          {isDragActive ? (
-            <p>ファイルをここに ...</p>
-          ) : (
-            <p>ドラッグアンドドロップしてください</p>
-          )}
-        </div>
-      </header>
     </div>
   );
+
 }
 
 export default App;
