@@ -8,16 +8,12 @@ import Papa from "papaparse";
 import Encoding from "encoding-japanese";
 import { toast, ToastContainer } from "react-toastify";
 
-import { TextField, Checkbox, FormControl, FormLabel, FormHelperText, FormGroup } from "@mui/material";
+import { TextField, Checkbox } from "@mui/material";
+import { Button, Box } from "@mui/material";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { isSafari, toCSV } from "./libs/csv";
 import NameDropdown from "./InputName";
-
-const style = {
-  width: 200,
-  height: 150,
-  border: "1px dotted #888",
-};
 
 const apiURL =
   process.env.REACT_APP_COMIKET_API_URL || "http://localhost:3000/upload";
@@ -93,22 +89,35 @@ function changeRowColor(
 function App() {
   const [toastMessage, setToastMessage] = React.useState(["info", ""]);
   const [toastId, setToastId] = React.useState<any>(undefined);
+
   const [orderName, setOrderName] = React.useState("");
-  const [checkedColors, _] = React.useState(
-    () => new Set<number>(radioColors.map((e) => e.num))
+  const [nameError, setNameError] = React.useState(false);
+
+  const [checkedColors, setCheckedColors] = React.useState(
+      new Set<number>(radioColors.map((e) => e.num))
   );
+
+  type Direction = 'forward' | 'backward';
+  const [step, setStep] = React.useState(1);
+  const [direction, setDirection] = React.useState<Direction>('forward');
+  const handleNext = () => {
+    setDirection("forward");
+    setStep((prev) => prev + 1);
+  };
+  const handleBack = () => {
+    setDirection("backward");
+    setStep((prev) => prev - 1);
+  };
 
   // APIでエラーが出たばあい、操作を無効化するときに使う
   // いまは登録者一覧が取れなかったら操作を完全に無効化（それ以上の操作は意味ないから）
   // するときに使ってる
   const [isDisabled, setIsDisabled] = React.useState(false);
 
-  const reader = new FileReader();
+  const [selectedName, setSelectedName] = React.useState<string | null>(null);
+  const [confirmedName, setConfirmedName] = React.useState("");
 
-  const changeOrderName = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = event.target;
-    setOrderName(value);
-  };
+  const reader = new FileReader();
 
   const isColorIncluded = (num: number): boolean => checkedColors.has(num);
 
@@ -198,8 +207,8 @@ function App() {
     try {
       setToastMessage(["start", "変換開始"]);
 
-      if (orderName === "") {
-        throw new Error("発注者が空欄だよ！お兄ちゃん！");
+      if (orderName === "" || nameError) {
+        throw new Error("発注者がおかしくなっちゃった！お兄ちゃん。ごめんだけどもう一度最初からやりなおしてくれる？");
       }
 
       const codes = new Uint8Array(reader.result as ArrayBuffer);
@@ -226,10 +235,10 @@ function App() {
           if (
             header[0] !== "Header" ||
             header[1] !== "ComicMarketCD-ROMCatalog" ||
-            header[2] !== "ComicMarket105"
+            header[2] !== "ComicMarket106"
           ) {
             throw new Error(
-              "このファイルはC105のWebカタログのcsvじゃないみたいだよ！お兄ちゃん！"
+              "このファイルはC106のWebカタログのcsvじゃないみたいだよ！お兄ちゃん！"
             );
           }
 
@@ -315,11 +324,15 @@ function App() {
   };
 
   const checkButtonHandler = (num: number) => {
-    if (checkedColors.has(num)) {
-      checkedColors.delete(num);
-    } else {
-      checkedColors.add(num);
-    }
+    setCheckedColors((prevColors) => {
+      const newColors = new Set(prevColors);
+      if (newColors.has(num)) {
+        newColors.delete(num);
+      } else {
+        newColors.add(num);
+      }
+      return newColors;
+    });
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
@@ -331,59 +344,118 @@ function App() {
       style={{
         color: i.code,
       }}
+      checked={checkedColors.has(i.num)} // ステートに連動
       onChange={() => checkButtonHandler(i.num)}
     />
   ));
 
   return (
-    <div className="App">
-      <ToastContainer />
-      <div className={`form-container ${isDisabled ? 'disabled' : ''}`}>
-        <div className="form-container">
-          {/* NameDropdown 追加 */}
-          <FormControl fullWidth margin="normal">
-            <FormLabel className="form-label-left">登録済みのお名前</FormLabel>
-            <NameDropdown onSelect={(name) => setOrderName(name)} onError={() => setIsDisabled(true)} />
-            <FormHelperText>既に登録されているお名前を選択することもできます。</FormHelperText>
-          </FormControl>
-
-          <FormControl fullWidth margin="normal">
-            <FormLabel className="form-label-left">お名前</FormLabel>
-            <TextField
-              required
-              type="text"
-              id="orderName"
-              placeholder="発注者名"
-              onChange={changeOrderName}
-              variant="outlined"
-              fullWidth
-            />
-            <FormHelperText>この発注処理を行う方のお名前を入力してください。</FormHelperText>
-          </FormControl>
-
-          <FormControl component="fieldset" fullWidth margin="normal">
-            <FormLabel className="form-label-left">サークル色の選択</FormLabel>
-            <FormHelperText>処理対象とするサークルの色を選択してください。（複数選択可）</FormHelperText>
-            <FormGroup row>
-              {checkGroup}
-            </FormGroup>
-          </FormControl>
-
-          <FormControl fullWidth margin="normal">
-            <FormLabel className="form-label-left">ファイルアップロード</FormLabel>
-            <div {...getRootProps()} style={style}>
-              <input {...getInputProps()} data-testid="csv-fileinput" />
-              {isDragActive ? (
-                <p>ファイルをここに ...</p>
-              ) : (
-                <p>ドラッグアンドドロップしてください</p>
+      <div className="App">
+        <header className="app-header">
+          <h1>UPFG生協発注フォーム</h1>
+        </header>
+        <ToastContainer />
+        <div className={`wizard-container ${isDisabled ? 'disabled' : ''}`}>
+          <AnimatePresence mode="wait">
+            <motion.div
+                key={step}
+                initial={{ x: direction === 'forward' ? 300 : -300, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: direction === 'forward' ? -300 : 300, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="wizard-step"  // ここ
+            >
+              {step === 1 && (
+                  <div>
+                    <h2>Step 1: 登録済みのお名前を選択してください</h2>
+                    <NameDropdown
+                        onSelect={(name) => setSelectedName(name || null)}
+                        onError={() => setIsDisabled(true)}  // ここ
+                    />
+                    <p style={{ marginTop: "8px", color: "#666", fontSize: "0.9rem" }}>
+                      ※ ご自身のお名前が見つからない場合は、管理者に連絡して追加してもらってください
+                    </p>
+                    <p style={{ marginTop: "8px", color: "#666", fontSize: "0.9rem" }}>
+                      生協参加表明してないと名前が出てこないです
+                    </p>
+                    <Button
+                        variant="contained"
+                        onClick={handleNext}
+                        disabled={selectedName === null}
+                        sx={{ mt: 2 }}
+                    >
+                      次へ
+                    </Button>
+                  </div>
               )}
-            </div>
-            <FormHelperText>下記エリアにCSVファイルをドラッグアンドドロップしてください。</FormHelperText>
-          </FormControl>
+
+              {step === 2 && (
+                  <div>
+                    <h2>Step 2: あなたは本当に「{selectedName}」さんですか？</h2>
+                    <TextField
+                        label="確認のため、もう一度ここに自分のお名前を入力してください"
+                        value={confirmedName}
+                        onChange={(e) => setConfirmedName(e.target.value)}
+                        fullWidth
+                        error={nameError}
+                        helperText={nameError ? "選択された名前と入力された名前が一致しません" : "あなたの名前をもう一度入力してください"}
+                    />
+                    <p style={{ marginTop: "8px", color: "#666", fontSize: "0.9rem" }}>
+                      名簿の名前と発注者が一致しないとバックヤードの作業者が憤死します。
+                    </p>
+                    <p style={{ marginTop: "8px", color: "#666", fontSize: "0.9rem" }}>
+                      名前の一致のためのご協力をおねがいします
+                    </p>
+                    <Box sx={{ mt: 2 }}>
+                      <Button onClick={handleBack} sx={{ mr: 1 }}>戻る</Button>
+                      <Button
+                          variant="contained"
+                          onClick={() => {
+                            if (confirmedName === selectedName) {
+                              setNameError(false);
+                              setOrderName(confirmedName);
+                              handleNext();
+                            } else {
+                              setNameError(true);  // トーストは出さない
+                            }
+                          }}
+                      >
+                        次へ
+                      </Button>
+                    </Box>
+                  </div>
+              )}
+
+              {step === 3 && (
+                  <div>
+                    <h2>Step 3: サークル色を選択してください</h2>
+                    {checkGroup}
+                    <p style={{ marginTop: "8px", color: "#666", fontSize: "0.9rem" }}>
+                      生協に発注する色のみ選択してください
+                    </p>
+                    <Box sx={{ mt: 2 }}>
+                      <Button onClick={handleBack} sx={{ mr: 1 }}>戻る</Button>
+                      <Button variant="contained" onClick={handleNext}>次へ</Button>
+                    </Box>
+                  </div>
+              )}
+
+              {step === 4 && (
+                  <div>
+                    <h2>Step 4: CSVファイルをアップロードしてください</h2>
+                    <div {...getRootProps()} style={{ border: "2px dashed #ccc", padding: "20px", marginTop: "16px" }}>
+                      <input {...getInputProps()} />
+                      {isDragActive ? <p>ここにファイルをドロップ...</p> : <p>ドラッグアンドドロップしてください</p>}
+                    </div>
+                    <Box sx={{ mt: 2 }}>
+                      <Button onClick={handleBack}>戻る</Button>
+                    </Box>
+                  </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
-    </div>
   );
 
 }

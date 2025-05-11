@@ -18,7 +18,7 @@ const NameDropdown = ({ onSelect, onError }: { onSelect: (value: string) => void
           setLoading(false);
         })
         .catch((error) => {
-          toast.error("サーバエラー。発注者一覧がスプレッドシートからとれないの。なにかおかしなことが起こっているどいてそいつころ、管理者に連絡してね！", {
+          toast.error("サーバエラー。発注者一覧がスプレッドシートからとれないの。なにかおかしなことが起こっているどいてそいつころ管理者に連絡してね！", {
             position: "top-center",
             autoClose: false,
             closeOnClick: false,         // クリックしても閉じない
