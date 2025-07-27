@@ -66,7 +66,7 @@ app.post(
 );
 
 app.get("/order-submitters", async (req, res) => {
-  const spreadsheetId = "1L-YdL8OBbrB1aUbyYS6TNVR-F0ddUNJTftK5aRM4BvI";
+  const spreadsheetId = "1yAHWUDcAkVBW8UsKQtt23n98OCSIkI3tRTyOhh_1CO4";
   const sheetName = "名簿";
 
   if (!spreadsheetId || !sheetName) {
