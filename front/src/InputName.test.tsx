@@ -7,28 +7,34 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe("InputName Component", () => {
   test("API の値を取得してドロップダウンに表示する", async () => {
-    // mockedAxios.get.mockResolvedValue({
-    //   data: ["Alice", "Bob", "Charlie"],
-    // });
-    //
-    // render(<NameDropdown />);
-    //
-    // // ローディング表示
-    // expect(screen.getByRole("progressbar")).toBeInTheDocument();
-    //
-    // // API のデータ取得後、ドロップダウンが表示される
-    // await screen.findByTestId("name-dropdown");
-    //
-    // // "Alice", "Bob", "Charlie" が表示されるか確認
-    // expect(screen.getByText("Alice")).toBeInTheDocument();
-    // expect(screen.getByText("Bob")).toBeInTheDocument();
-    // expect(screen.getByText("Charlie")).toBeInTheDocument();
-    //
-    // // "Alice" を選択
-    // fireEvent.mouseDown(screen.getByTestId("name-dropdown"));
-    // fireEvent.click(screen.getByText("Alice"));
-    //
-    // // 選択が反映されることを確認
-    // expect(screen.getByTestId("name-dropdown")).toHaveTextContent("Alice");
+    mockedAxios.get.mockResolvedValue({
+      data: { orderSubmitters: ["Alice", "Bob", "Charlie"] },
+    });
+
+    const handleSelect = jest.fn();
+    const handleError = jest.fn();
+
+    render(<NameDropdown onSelect={handleSelect} onError={handleError} />);
+
+    // ローディング表示
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+
+    // API 取得完了を待つ
+    const dropdown = await screen.findByTestId("name-dropdown");
+
+    // "Alice", "Bob", "Charlie" が候補に表示されるか
+    fireEvent.mouseDown(dropdown);  // メニュー開く
+
+    await waitFor(() => {
+      expect(screen.getByText("Alice")).toBeInTheDocument();
+      expect(screen.getByText("Bob")).toBeInTheDocument();
+      expect(screen.getByText("Charlie")).toBeInTheDocument();
+    });
+
+    // "Alice" を選択
+    fireEvent.click(screen.getByText("Alice"));
+
+    // onSelect が呼ばれたことを確認
+    expect(handleSelect).toHaveBeenCalledWith("Alice");
   });
 });

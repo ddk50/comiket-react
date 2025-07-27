@@ -86,7 +86,7 @@ function changeRowColor(
   });
 }
 
-function App() {
+const App = () => {
   const [toastMessage, setToastMessage] = React.useState(["info", ""]);
   const [toastId, setToastId] = React.useState<any>(undefined);
 
