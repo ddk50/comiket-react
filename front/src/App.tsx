@@ -16,7 +16,7 @@ import { isSafari, toCSV } from "./libs/csv";
 import NameDropdown from "./InputName";
 
 const apiURL =
-  process.env.REACT_APP_COMIKET_API_URL || "http://localhost:3000/upload";
+  process.env.REACT_APP_COMIKET_API_URL_BASE + "/upload";
 
 const radioColors = [
   // {num: 0, code: "#ffffff", label: "全部", checked: true},

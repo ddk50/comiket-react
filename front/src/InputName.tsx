@@ -5,7 +5,7 @@ import Fuse from "fuse.js";
 import { toRomaji } from "wanakana";
 import {toast} from "react-toastify";
 
-const apiURL = process.env.REACT_APP_COMIKET_API_URL || "http://localhost:3000/order-submitters";
+const apiURL = process.env.REACT_APP_COMIKET_API_URL_BASE + "/order-submitters";
 
 const NameDropdown = ({ onSelect, onError }: { onSelect: (value: string) => void, onError: () => void }) => {
   const [options, setOptions] = useState<string[]>([]);
